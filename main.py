@@ -1,6 +1,14 @@
 from mongoengine import connect
+from fastapi import FastAPI
+from routes import router
+
 
 connect("bdsync")
+
+app = FastAPI()
+
+app.include_router(router)
+
 
 """
 --- Person model(doc)
