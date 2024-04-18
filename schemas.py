@@ -12,6 +12,7 @@ class PersonBaseSchema(BaseModel):
 
 class PersonResponseSchema(PersonBaseSchema):
     id: str
+    # typing.Union[str, ObjectId]
 
 
 class PersonCreateSchema(PersonBaseSchema):
@@ -19,9 +20,9 @@ class PersonCreateSchema(PersonBaseSchema):
 
 
 class PersonUpdateSchema(BaseModel):
-    name: Optional[str]
-    birth_date: Optional[date]
-    extra_info: Optional[str]
+    name: Optional[str] = None
+    birth_date: Optional[date] = None
+    extra_info: Optional[str] = None
 
     class Config:
         orm_mode = True
