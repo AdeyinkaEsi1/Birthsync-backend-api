@@ -41,5 +41,7 @@ router.delete(
         )(Controllers.delete_birthday)
 
 
-router.get("/users/me"
-           )(Controllers.read_users_me)
+router.post("/token")(Controllers.login)
+
+
+router.get("/users/me")(Controllers.read_users_me)
