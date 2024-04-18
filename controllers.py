@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from models import *
 from schemas import *
 from typing import List
-from mongoengine import NotUniqueError
+from mongoengine import NotUniqueError, DoesNotExist
 
 class Controllers:
     
@@ -17,7 +17,8 @@ class Controllers:
             bday_data.append(
                 {"name": bd.name,
                  "birth_date": bd.birth_date,
-                 "extra_info": bd.extra_info}
+                 "extra_info": bd.extra_info,
+                 "id": str(bd.id)}
             )
         return bday_data
     
@@ -27,5 +28,53 @@ class Controllers:
             new_data.save()
             return {"message": "Data created successfully"}
         except NotUniqueError:
-            raise HTTPException(status_code=406, detail="data not unique")
+            raise HTTPException(status_code=406, detail="Data not unique")
+        
+    
+    def update_birthday(data_id: str, data: PersonUpdateSchema):
+        try:
+            person = Person.objects.get(id=data_id)
+        
+            # Update the fields that have changed
+            if data.name is not None:
+                person.name = data.name
+            if data.birth_date is not None:
+                person.birth_date = data.birth_date
+            if data.extra_info is not None:
+                person.extra_info = data.extra_info
+            # Save the updated Person object back to the database
+            person.update()
+            # update_data = data.model_dump(exclude_unset=True)
+            # Person.objects(id=data_id).update(**update_data)
+            return {"message": "Data successfully updated"}
+        except DoesNotExist:
+            raise HTTPException(status_code=404, detail="Data not found")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+        
+    
+    def get_birthday(data_id: str) -> PersonResponseSchema:
+        try:
+            person = Person.objects.get(id=data_id)
+            person_data = {
+            "name": person.name,
+            "birth_date": person.birth_date,
+            "extra_info": person.extra_info,
+            "id": str(person.id)
+            }
+        except Exception:
+            raise HTTPException(status_code=404, detail="Data not found")
+        return person_data
+    
+    
+    def delete_birthday(data_id: str):
+        try:
+            data = Person.objects.get(id=data_id)
+            data.delete()
+        except Exception:
+            raise HTTPException(status_code=404, detail="Data not found")
+        return {"message": "Data deleted successfully"}     
+        
+
+
         
