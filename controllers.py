@@ -33,19 +33,8 @@ class Controllers:
     
     def update_birthday(data_id: str, data: PersonUpdateSchema):
         try:
-            person = Person.objects.get(id=data_id)
-        
-            # Update the fields that have changed
-            if data.name is not None:
-                person.name = data.name
-            if data.birth_date is not None:
-                person.birth_date = data.birth_date
-            if data.extra_info is not None:
-                person.extra_info = data.extra_info
-            # Save the updated Person object back to the database
-            person.update()
-            # update_data = data.model_dump(exclude_unset=True)
-            # Person.objects(id=data_id).update(**update_data)
+            update_data = data.model_dump(exclude_unset=True)
+            Person.objects(id=data_id).update(**update_data)
             return {"message": "Data successfully updated"}
         except DoesNotExist:
             raise HTTPException(status_code=404, detail="Data not found")
