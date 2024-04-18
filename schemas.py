@@ -1,5 +1,7 @@
+from typing import Union, Optional
 from pydantic import BaseModel, Field
 from datetime import date
+
 
 
 class PersonBaseSchema(BaseModel):
@@ -9,8 +11,17 @@ class PersonBaseSchema(BaseModel):
 
 
 class PersonResponseSchema(PersonBaseSchema):
-    pass
+    id: str
 
 
 class PersonCreateSchema(PersonBaseSchema):
     pass
+
+
+class PersonUpdateSchema(BaseModel):
+    name: Optional[str]
+    birth_date: Optional[date]
+    extra_info: Optional[str]
+
+    class Config:
+        orm_mode = True
