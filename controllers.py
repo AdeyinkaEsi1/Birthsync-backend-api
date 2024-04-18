@@ -1,13 +1,17 @@
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
 from models import *
 from schemas import *
-from typing import List
+from typing import Annotated, List
 from mongoengine import NotUniqueError, DoesNotExist
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 class Controllers:
     
-    def root():
-        return {"message": "ROOT ENDPOINT"}
+    def root(token: Annotated[str, Depends(oauth2_scheme)]):
+        return {"token": token}
+        # return {"message": "ROOT ENDPOINT"}
     
 
     def list_birthdays() -> List[PersonResponseSchema]:
