@@ -14,6 +14,40 @@ class Controllers:
         # return {"message": "ROOT ENDPOINT"}
     
 
+    class User(BaseModel):
+        username: str
+        email: Union[str, None] = None
+        full_name: Union[str, None] = None
+        disabled: Union[bool, None] = None
+
+
+    def fake_decode_token(token):
+        return Controllers.User(
+            username=token + "fakedecoded", email="john@example.com", full_name="John Doe"
+        )
+
+
+    async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+        user = Controllers.fake_decode_token(token)
+        return user
+
+
+    async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
+        return current_user
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def list_birthdays() -> List[PersonResponseSchema]:
         data = Person.objects.all()
         bday_data = []
