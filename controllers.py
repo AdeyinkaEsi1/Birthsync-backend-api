@@ -19,7 +19,7 @@ class Controllers:
     #     return {"token": token}
         # return {"message": "ROOT ENDPOINT"}
 
-    SECRET_KEY = "SECRET_KEY"
+    SECRET_KEY = ""
     ALGORITHM = ""
     ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
