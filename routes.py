@@ -5,10 +5,10 @@ from typing import List
 router = APIRouter()
 
 
-router.get(
-        "/",
-        status_code=status.HTTP_200_OK
-        )(Controllers.root)
+# router.get(
+#         "/",
+#         status_code=status.HTTP_200_OK
+#         )(Controllers.root)
 
 
 router.get(
