@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from models import *
 from schemas import *
@@ -8,21 +8,79 @@ from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+import datetime
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 class Controllers:
     
-    def root(token: Annotated[str, Depends(oauth2_scheme)]):
-        return {"token": token}
+    # def root(token: Annotated[str, Depends(oauth2_scheme)]):
+    #     return {"token": token}
         # return {"message": "ROOT ENDPOINT"}
 
     SECRET_KEY = "aa78aca0d83af707dcac482ce4226d14ae75d80a4ba8656705f7543ea00e55f4"
     ALGORITHM = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-    def list_birthdays() -> List[PersonResponseSchema]:
+    def jwt_encode(payload: dict):
+        """Encode JWT using account's payload"""
+        return jwt.encode(
+            {
+                **payload,
+                "exp": datetime.datetime.now(datetime.UTC)
+                + datetime.timedelta(minutes=Controllers.ACCESS_TOKEN_EXPIRE_MINUTES),
+            },
+          Controllers.SECRET_KEY,
+            algorithm="HS256",
+        )
+
+
+    def jwt_decode(token: str):
+        """Decode JWT using account's payload"""
+        return jwt.decode(token, Controllers.SECRET_KEY, algorithms=["HS256"])
+
+
+    def auth_account(
+    request: Request = Annotated[Request, Depends(oauth2_scheme)]
+    ):
+        """Get current account from JWT token. If token is invalid, raise an exception.
+        If token is valid, return account object.
+        """
+        token = request.cookies.get("token")
+        if token is None:
+            raise HTTPException(
+                headers={"WWW-Authenticate": "Bearer"},
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication credentials",
+            )
+        
+        try:
+            payload = Controllers.jwt_decode(token)
+        except Exception:
+            # logger.exception("auth_account(jwt_decode): Detokenization failed")
+            raise HTTPException(
+                headers={"WWW-Authenticate": "Bearer"},
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication credentials",
+            )
+        try:
+            account = Person.objects.get(({"id": payload["id"]}))
+        except DoesNotExist:
+            raise HTTPException(
+                headers={"WWW-Authenticate": "Bearer"},
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication credentials",
+            )
+        return account
+
+
+    def list_birthdays(auth = Depends(auth_account)) -> List[PersonResponseSchema]:
+        if auth.account:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Authenticated account has no team"
+            )
         data = Person.objects.all()
         bday_data = []
         for bd in data:
@@ -33,6 +91,7 @@ class Controllers:
                  "id": str(bd.id)}
             )
         return bday_data
+    
     
     def add_birthday(data: PersonCreateSchema):
         try:
