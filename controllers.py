@@ -19,9 +19,24 @@ class Controllers:
     #     return {"token": token}
         # return {"message": "ROOT ENDPOINT"}
 
-    SECRET_KEY = "aa78aca0d83af707dcac482ce4226d14ae75d80a4ba8656705f7543ea00e55f4"
-    ALGORITHM = "HS256"
+    SECRET_KEY = ""
+    ALGORITHM = ""
     ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+    """
+    response.set_cookie(
+                key="token",
+                value=token,
+                secure=True,
+                samesite="none",
+                expires=(
+                    datetime.datetime.utcnow()
+                    + datetime.timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+                ).strftime("%a, %d %b %Y %H:%M:%S GMT"),
+            )
+            ret
+    """
+
 
     def jwt_encode(payload: dict):
         """Encode JWT using account's payload"""
