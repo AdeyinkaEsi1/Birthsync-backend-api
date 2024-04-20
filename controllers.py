@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 import datetime
+import main
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -19,9 +20,9 @@ class Controllers:
     #     return {"token": token}
         # return {"message": "ROOT ENDPOINT"}
 
-    SECRET_KEY = ""
-    ALGORITHM = ""
-    ACCESS_TOKEN_EXPIRE_MINUTES = 30
+    SECRET_KEY = main.SECRET_KEY
+    ALGORITHM = main.ALGORITHM
+    ACCESS_TOKEN_EXPIRE_MINUTES = main.ACCESS_TOKEN_EXPIRE_MINUTES
 
     """
     response.set_cookie(

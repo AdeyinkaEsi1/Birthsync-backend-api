@@ -1,11 +1,8 @@
-from typing import Union, Optional
+from typing import Optional
 from pydantic import BaseModel, Field, EmailStr
 from datetime import date
 import typing
 from bson import ObjectId
-from datetime import datetime
-
-
 
 
 class PersonBaseSchema(BaseModel):
