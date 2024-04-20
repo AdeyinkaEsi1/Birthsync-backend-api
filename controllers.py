@@ -14,6 +14,7 @@ import main
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+
 class Controllers:
     
     # def root(token: Annotated[str, Depends(oauth2_scheme)]):
@@ -52,9 +53,11 @@ class Controllers:
         )
 
 
+
     def jwt_decode(token: str):
         """Decode JWT using account's payload"""
         return jwt.decode(token, Controllers.SECRET_KEY, algorithms=["HS256"])
+
 
 
     def auth_account(
@@ -80,6 +83,7 @@ class Controllers:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid authentication credentials",
             )
+        
         try:
             account = Person.objects.get(({"id": payload["id"]}))
         except DoesNotExist:
@@ -150,7 +154,4 @@ class Controllers:
         except Exception:
             raise HTTPException(status_code=404, detail="Data not found")
         return {"message": "Data deleted successfully"}     
-        
-
-
         
