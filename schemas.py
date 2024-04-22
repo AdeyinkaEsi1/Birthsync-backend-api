@@ -13,7 +13,6 @@ class PersonBaseSchema(BaseModel):
 
 class PersonResponseSchema(PersonBaseSchema):
     id: str
-    # typing.Union[str, ObjectId]
 
 
 class PersonCreateSchema(PersonBaseSchema):
