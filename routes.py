@@ -1,9 +1,8 @@
+
 from fastapi import APIRouter, status
 from controllers import Controllers
 
-
 router = APIRouter()
-
 
 # router.get(
 #         "/",
@@ -39,4 +38,3 @@ router.delete(
         "/bday/get",
         status_code=status.HTTP_204_NO_CONTENT
         )(Controllers.delete_birthday)
-
