@@ -1,3 +1,4 @@
+
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from models import *
@@ -25,19 +26,6 @@ class Controllers:
     ALGORITHM = main.ALGORITHM
     ACCESS_TOKEN_EXPIRE_MINUTES = main.ACCESS_TOKEN_EXPIRE_MINUTES
 
-    """
-    response.set_cookie(
-                key="token",
-                value=token,
-                secure=True,
-                samesite="none",
-                expires=(
-                    datetime.datetime.utcnow()
-                    + datetime.timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-                ).strftime("%a, %d %b %Y %H:%M:%S GMT"),
-            )
-            ret
-    """
 
 
     def jwt_encode(payload: dict):
