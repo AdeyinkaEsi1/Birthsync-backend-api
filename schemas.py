@@ -28,3 +28,27 @@ class PersonUpdateSchema(BaseModel):
         orm_mode = True
 
         # =======================
+"""
+create acctdet schema
+acct reg schema
+sign in schema
+acct response schema
+acct update schema
+"""
+
+class AccountDetailsSchema(BaseModel):
+    username: str
+    password: str
+
+class AccountRegSchema(AccountDetailsSchema):
+    pass
+
+class Sign_inSchema(AccountDetailsSchema):
+    pass
+
+class AccountResponseSchema(AccountDetailsSchema):
+    pass
+
+class AccountUpdateSchema(AccountDetailsSchema):
+    pass
+
