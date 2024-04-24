@@ -38,3 +38,15 @@ router.delete(
         "/bday/get",
         status_code=status.HTTP_204_NO_CONTENT
         )(Controllers.delete_birthday)
+
+
+router.post(
+        "/auth/register",
+        status_code=status.HTTP_201_CREATED
+        )(Controllers.sign_up)
+
+
+router.post(
+        "/auth/login",
+        status_code=status.HTTP_200_OK
+        )(Controllers.sign_in)
