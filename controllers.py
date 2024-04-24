@@ -22,73 +22,27 @@ class Controllers:
     #     return {"token": token}
         # return {"message": "ROOT ENDPOINT"}
 
-    SECRET_KEY = main.SECRET_KEY
-    ALGORITHM = main.ALGORITHM
-    ACCESS_TOKEN_EXPIRE_MINUTES = main.ACCESS_TOKEN_EXPIRE_MINUTES
 
-
-
-    def jwt_encode(payload: dict):
-        """Encode JWT using account's payload"""
-        return jwt.encode(
-            {
-                **payload,
-                "exp": datetime.datetime.now(datetime.UTC)
-                + datetime.timedelta(minutes=Controllers.ACCESS_TOKEN_EXPIRE_MINUTES),
-            },
-          Controllers.SECRET_KEY,
-            algorithm="HS256",
-        )
-
-
-
-    def jwt_decode(token: str):
-        """Decode JWT using account's payload"""
-        return jwt.decode(token, Controllers.SECRET_KEY, algorithms=["HS256"])
-
-
-
-    def auth_account(
-    request: Request = Annotated[Request, Depends(oauth2_scheme)]
-    ):
-        """Get current account from JWT token. If token is invalid, raise an exception.
-        If token is valid, return account object.
-        """
-        token = request.cookies.get("token")
-        if token is None:
-            raise HTTPException(
-                headers={"WWW-Authenticate": "Bearer"},
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication credentials",
-            )
-        
+    def sign_up(payload: AccountRegSchema):
         try:
-            payload = Controllers.jwt_decode(token)
-        except Exception:
-            # logger.exception("auth_account(jwt_decode): Detokenization failed")
-            raise HTTPException(
-                headers={"WWW-Authenticate": "Bearer"},
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication credentials",
-            )
-        
-        try:
-            account = Person.objects.get(({"id": payload["id"]}))
-        except DoesNotExist:
-            raise HTTPException(
-                headers={"WWW-Authenticate": "Bearer"},
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication credentials",
-            )
-        return account
+            data = BaseAccount(email=payload.email, username=payload.username, hashed_password=payload.password)
+            data.save()
+            return {"message": "User created successfully"}
+        except NotUniqueError:
+            raise HTTPException(status_code=406, detail="Data not unique")
 
 
-    def list_birthdays(auth = Depends(auth_account)) -> List[PersonResponseSchema]:
-        if auth.account:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Authenticated account has no team"
+    def sign_in(payload: Sign_inSchema):
+        data = BaseAccount.objects.get(email=payload.email)
+        if data:
+            return {"name": data.username,
+                 "birth_date": data.email,
+                 "id": str(data.id)}
+        raise HTTPException(
+                status_code=404, detail="Not Authenticated"
             )
+
+    def list_birthdays()-> List[PersonResponseSchema]:
         data = Person.objects.all()
         bday_data = []
         for bd in data:
