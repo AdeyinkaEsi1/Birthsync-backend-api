@@ -12,6 +12,7 @@ class Person(Document):
 
 
 class BaseAccount(Document):
-    username: str
-    password: str
+    username = StringField(max_length=50)
+    email = StringField(max_length=50, unique=True, required=True)
+    hashed_password = StringField(max_length=50, required=True)
 

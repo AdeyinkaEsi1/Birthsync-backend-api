@@ -38,17 +38,23 @@ acct update schema
 
 class AccountDetailsSchema(BaseModel):
     username: str
-    password: str
+    email: EmailStr
+    
 
 class AccountRegSchema(AccountDetailsSchema):
-    pass
+    password: str
 
 class Sign_inSchema(AccountDetailsSchema):
-    pass
+    password: str
 
 class AccountResponseSchema(AccountDetailsSchema):
     pass
 
-class AccountUpdateSchema(AccountDetailsSchema):
-    pass
+class AccountUpdateSchema(BaseModel):
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None
+
+    class Config:
+        orm_mode = True
 
