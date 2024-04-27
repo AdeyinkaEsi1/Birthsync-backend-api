@@ -2,6 +2,7 @@
 from fastapi import APIRouter, status
 from controllers import Controllers
 
+
 router = APIRouter()
 
 # router.get(
@@ -39,7 +40,7 @@ router.delete(
         status_code=status.HTTP_204_NO_CONTENT
         )(Controllers.delete_birthday)
 
-
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 router.post(
         "/auth/register",
         status_code=status.HTTP_201_CREATED
@@ -48,5 +49,7 @@ router.post(
 
 router.post(
         "/auth/login",
-        status_code=status.HTTP_200_OK
+        status_code=status.HTTP_200_OK,
         )(Controllers.sign_in)
+
+
