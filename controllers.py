@@ -13,19 +13,22 @@ import datetime
 import main
 
 
+
+
+bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+class AccountWithTeam:
+    def __init__(self, account):
+        for key, value in vars(account).items():
+            setattr(self, key, value)
+        self.account = account
 
 class Controllers:
-    
-    # def root(token: Annotated[str, Depends(oauth2_scheme)]):
-    #     return {"token": token}
-        # return {"message": "ROOT ENDPOINT"}
-
 
     def sign_up(payload: AccountRegSchema):
         try:
-            data = BaseAccount(email=payload.email, username=payload.username, hashed_password=payload.password)
+            data = BaseAccount(email=payload.email, username=payload.username, hashed_password=payload.hashed_password)
             data.save()
             return {"message": "User created successfully"}
         except NotUniqueError:
@@ -38,9 +41,18 @@ class Controllers:
             return {"name": data.username,
                  "birth_date": data.email,
                  "id": str(data.id)}
+        
+                
         raise HTTPException(
                 status_code=404, detail="Not Authenticated"
             )
+
+
+
+
+
+
+# =============================================================================
 
     def list_birthdays()-> List[PersonResponseSchema]:
         data = Person.objects.all()
