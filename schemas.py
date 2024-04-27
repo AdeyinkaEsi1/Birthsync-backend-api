@@ -39,10 +39,15 @@ acct update schema
 class AccountDetailsSchema(BaseModel):
     username: str
     email: EmailStr
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
     
 
 class AccountRegSchema(AccountDetailsSchema):
-    password: str
+    hashed_password: str
 
 class Sign_inSchema(AccountDetailsSchema):
     password: str
