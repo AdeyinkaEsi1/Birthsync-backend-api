@@ -53,3 +53,8 @@ router.post(
         )(Controllers.sign_in)
 
 
+router.get(
+    "/auth/users",
+    status_code=status.HTTP_200_OK,
+    )(Controllers.list_users)
+
