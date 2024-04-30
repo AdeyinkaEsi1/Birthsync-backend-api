@@ -1,14 +1,8 @@
-
 from fastapi import APIRouter, status
 from controllers import Controllers
 
 
 router = APIRouter()
-
-# router.get(
-#         "/",
-#         status_code=status.HTTP_200_OK
-#         )(Controllers.root)
 
 
 router.get(
@@ -48,7 +42,7 @@ router.post(
 
 
 router.post(
-        "/auth/login",
+        "/token",
         status_code=status.HTTP_200_OK,
         )(Controllers.sign_in)
 
