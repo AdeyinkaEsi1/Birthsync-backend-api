@@ -6,55 +6,77 @@ from schemas import *
 from typing import Annotated, List, Union
 from mongoengine import NotUniqueError, DoesNotExist
 from datetime import datetime, timedelta, timezone
-from pydantic import BaseModel
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 import datetime
-import main
 
-
-
-
-bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-class AccountWithTeam:
-    def __init__(self, account):
-        for key, value in vars(account).items():
-            setattr(self, key, value)
-        self.account = account
 
 class Controllers:
 
     def sign_up(payload: AccountRegSchema):
         try:
-            data = BaseAccount(email=payload.email, username=payload.username, hashed_password=payload.hashed_password)
+            hashed_password = pwd_context.hash(payload.hashed_password)
+            data = BaseAccount(username=payload.username, hashed_password=hashed_password, email=payload.email)
             data.save()
             return {"message": "User created successfully"}
         except NotUniqueError:
             raise HTTPException(status_code=406, detail="Data not unique")
 
 
-    def sign_in(payload: Sign_inSchema):
-        data = BaseAccount.objects.get(email=payload.email)
-        if data:
-            return {"name": data.username,
-                 "birth_date": data.email,
-                 "id": str(data.id)}
+#  def sign_in(data: Annotated[OAuth2PasswordRequestForm, Depends()])
+    def sign_in(data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+        try:
+            user = BaseAccount.objects.get(username=data.username)
+            if user and Controllers.verify_password(data.password, user.hashed_password):
+                access_token = Controllers.jwt_encode(data={"sub": user.username})
+        except:
+            raise HTTPException(status_code=404, detail="Details not found")
+        return {"access_token": access_token, "token_type": "bearer"}
+
+
+    def verify_password(plain_password, hashed_password):
+        return pwd_context.verify(plain_password, hashed_password)
         
-                
-        raise HTTPException(
-                status_code=404, detail="Not Authenticated"
-            )
+
+    def jwt_encode(data: dict, expires_delta: timedelta = None):
+        to_encode = data.copy()
+        # expire = None
+        if expires_delta:
+            expire = datetime.datetime.now(datetime.UTC) + expires_delta
+        expire = datetime.datetime.now(datetime.UTC) + timedelta(minutes=20)
+        to_encode.update({"exp": expire})
+        encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        return encoded_jwt
 
 
+    def jwt_decode(token: str):
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            return payload
+        except JWTError:
+            raise HTTPException(status_code=401, detail="Could not decode token")
+        
 
+    async def auth_account(token: Annotated[str, Depends(oauth2_scheme)]):
+        credentials_exception = HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        """Checks authentication"""
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            username: str = payload.get("sub")
+            if username is None:
+                raise credentials_exception
+        except JWTError:
+            raise credentials_exception
+    
 
-
-
-# =============================================================================
-
-    def list_birthdays()-> List[PersonResponseSchema]:
+    def list_birthdays(user: BaseAccount = Depends(auth_account))-> List[PersonResponseSchema]:
         data = Person.objects.all()
         bday_data = []
         for bd in data:
@@ -65,6 +87,18 @@ class Controllers:
                  "id": str(bd.id)}
             )
         return bday_data
+    
+
+    def list_users()-> List[AccountResponseSchema]:
+        user = BaseAccount.objects.all()
+        users = []
+        for _ in user:
+            users.append(
+                {
+                    "username": _.username
+                }
+            )
+        return users
     
     
     def add_birthday(data: PersonCreateSchema):
@@ -109,3 +143,4 @@ class Controllers:
             raise HTTPException(status_code=404, detail="Data not found")
         return {"message": "Data deleted successfully"}     
         
+
