@@ -1,8 +1,6 @@
-from typing import Optional
+from typing import Optional, Union
 from pydantic import BaseModel, Field, EmailStr
 from datetime import date
-import typing
-from bson import ObjectId
 
 
 class PersonBaseSchema(BaseModel):
@@ -34,16 +32,12 @@ class AccountDetailsSchema(BaseModel):
     email: EmailStr
 
 
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-    
-
 class AccountRegSchema(AccountDetailsSchema):
     hashed_password: str
 
-class Sign_inSchema(AccountDetailsSchema):
-    password: str
+class Signin_Schema(AccountDetailsSchema):
+    password: Union[str, int]
+
 
 class AccountResponseSchema(AccountDetailsSchema):
     pass
