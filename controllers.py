@@ -14,50 +14,72 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
+
+
 class Controllers:
 
     def sign_up(payload: AccountRegSchema):
         try:
             hashed_password = pwd_context.hash(payload.hashed_password)
-            data = BaseAccount(username=payload.username, hashed_password=hashed_password, email=payload.email)
+            data = BaseAccount(
+                username=payload.username,
+                hashed_password=hashed_password,
+                email=payload.email
+            )
             data.save()
             return {"message": "User created successfully"}
         except NotUniqueError:
-            raise HTTPException(status_code=406, detail="Data not unique")
+            raise HTTPException(
+                status_code=406,
+                detail="Data not unique"
+            )
 
 
-#  def sign_in(data: Annotated[OAuth2PasswordRequestForm, Depends()])
     def sign_in(data: Annotated[OAuth2PasswordRequestForm, Depends()]):
         try:
             user = BaseAccount.objects.get(username=data.username)
-            if user and Controllers.verify_password(data.password, user.hashed_password):
+            if user and Controllers.verify_password(
+                data.password,
+                user.hashed_password
+                ):
                 access_token = Controllers.jwt_encode(data={"sub": user.username})
         except:
-            raise HTTPException(status_code=404, detail="Details not found")
-        return {"access_token": access_token, "token_type": "bearer"}
+            raise HTTPException(
+                status_code=404,
+                detail="Details not found"
+            )
+        return {"access_token": access_token,
+                "token_type": "bearer"
+        }
 
 
     def verify_password(plain_password, hashed_password):
-        return pwd_context.verify(plain_password, hashed_password)
+        return pwd_context.verify(
+            plain_password,
+            hashed_password
+        )
         
 
-    def jwt_encode(data: dict, expires_delta: timedelta = None):
-        to_encode = data.copy()
-        # expire = None
-        if expires_delta:
-            expire = datetime.datetime.now(datetime.UTC) + expires_delta
-        expire = datetime.datetime.now(datetime.UTC) + timedelta(minutes=20)
-        to_encode.update({"exp": expire})
-        encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-        return encoded_jwt
+    def jwt_encode(data: dict):
+        return jwt.encode(
+            {
+                **data,
+                "exp": datetime.datetime.now(datetime.UTC)
+                + timedelta(minutes=20)
+            },
+            SECRET_KEY,
+            algorithm=ALGORITHM
+        )
 
 
     def jwt_decode(token: str):
         try:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            return payload
+            return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         except JWTError:
-            raise HTTPException(status_code=401, detail="Could not decode token")
+            raise HTTPException(
+                status_code=401,
+                detail="Could not decode token"
+            )
         
 
     async def auth_account(token: Annotated[str, Depends(oauth2_scheme)]):
@@ -68,7 +90,7 @@ class Controllers:
         )
         """Checks authentication"""
         try:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            payload = Controllers.jwt_decode(token)
             username: str = payload.get("sub")
             if username is None:
                 raise credentials_exception
