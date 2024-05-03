@@ -1,5 +1,6 @@
 
 from fastapi import Depends, HTTPException, Request, status
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from models import *
 from schemas import *
@@ -10,10 +11,12 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 import datetime
 import settings
+from logging import getLogger
 
 
+logger = getLogger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth")
 
 
 
@@ -36,23 +39,41 @@ class Controllers:
                 detail="Data not unique"
             )
 
-
-    def sign_in(data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+#   data: Annotated[OAuth2PasswordRequestForm, Depends()]
+    def sign_in(payload: Signin_Schema):
+        
         try:
-            user = BaseAccount.objects.get(username=data.username)
-            if user and Controllers.verify_password(
-                data.password,
-                user.hashed_password
-                ):
+            user = BaseAccount.objects.get(username=payload.username)
+            if user and Controllers.verify_password(payload.password, user.hashed_password):
                 access_token = Controllers.jwt_encode(data={"sub": user.username})
         except:
             raise HTTPException(
                 status_code=404,
                 detail="Details not found"
             )
-        return {"access_token": access_token,
-                "token_type": "bearer"
-        }
+        response = JSONResponse(
+            {
+                "user": {
+                    # "id": str(data.id),
+                    "username": payload.username,
+                    "email": payload.email,
+                }
+            }
+        )
+        response.set_cookie(
+            key="token",
+            value=access_token,
+            secure=True,
+            samesite="none",
+            expires=(
+                datetime.datetime.utcnow()
+                + datetime.timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+            ).strftime("%a, %d %b %Y %H:%M:%S GMT"),
+        )
+        return response
+        # return {"access_token": access_token,
+        #         "token_type": "bearer"
+        # }
 
 
     def verify_password(plain_password, hashed_password):
@@ -99,7 +120,15 @@ class Controllers:
                 detail="Invalid authentication credentials",
             )
         try:
-            payload = Controllers.jwt_decode(token)
+            payload  = Controllers.jwt_decode(token)
+        except Exception:
+            logger.exception("auth_account(jwt_decode): Detokenization failed")
+            raise HTTPException(
+                headers={"WWW-Authenticate": "Bearer"},
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication credentials",
+            )
+        try:
             username: str = payload.get("sub")
             if username is None:
                 raise credentials_exception
