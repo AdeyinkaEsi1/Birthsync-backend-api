@@ -9,6 +9,8 @@ from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 import datetime
+import settings
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -67,28 +69,35 @@ class Controllers:
                 "exp": datetime.datetime.now(datetime.UTC)
                 + timedelta(minutes=20)
             },
-            SECRET_KEY,
-            algorithm=ALGORITHM
+            settings.SECRET_KEY,
+            algorithm=settings.ALGORITHM
         )
 
 
     def jwt_decode(token: str):
         try:
-            return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         except JWTError:
             raise HTTPException(
                 status_code=401,
                 detail="Could not decode token"
             )
         
-
-    async def auth_account(token: Annotated[str, Depends(oauth2_scheme)]):
+    # token: Annotated[str, Depends(oauth2_scheme)]
+    async def auth_account(request: Request = Annotated[Request, Depends(oauth2_scheme)]):
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
         """Checks authentication"""
+        token = request.cookies.get("token")
+        if token is None:
+            raise HTTPException(
+                headers={"WWW-Authenticate": "Bearer"},
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication credentials",
+            )
         try:
             payload = Controllers.jwt_decode(token)
             username: str = payload.get("sub")
@@ -117,7 +126,8 @@ class Controllers:
         for _ in user:
             users.append(
                 {
-                    "username": _.username
+                    "username": _.username,
+                    "email": _.email
                 }
             )
         return users
