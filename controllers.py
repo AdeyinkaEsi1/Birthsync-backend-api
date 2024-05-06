@@ -1,5 +1,5 @@
 
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import BackgroundTasks, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from models import *
@@ -16,9 +16,7 @@ from logging import getLogger
 
 logger = getLogger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth")
-
-
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="")
 
 
 class Controllers:
@@ -40,26 +38,32 @@ class Controllers:
             )
 
 #   data: Annotated[OAuth2PasswordRequestForm, Depends()]
-    def sign_in(payload: Signin_Schema):
-        
+    def sign_in(bg_tasks: BackgroundTasks, payload: Signin_Schema):
         try:
             user = BaseAccount.objects.get(username=payload.username)
-            if user and Controllers.verify_password(payload.password, user.hashed_password):
-                access_token = Controllers.jwt_encode(data={"sub": user.username})
         except:
             raise HTTPException(
                 status_code=404,
                 detail="Details not found"
             )
+        if user and Controllers.verify_password(payload.password, user.hashed_password):
+            try:
+                access_token = Controllers.jwt_encode(data={"sub": user.username})
+            except:
+                raise HTTPException(
+                status_code=404,
+                detail="jwt encoding error."
+            )
         response = JSONResponse(
             {
                 "user": {
-                    # "id": str(data.id),
+                    "id": str(user.id),
                     "username": payload.username,
                     "email": payload.email,
                 }
             }
         )
+        # response = response
         response.set_cookie(
             key="token",
             value=access_token,
@@ -88,7 +92,7 @@ class Controllers:
             {
                 **data,
                 "exp": datetime.datetime.now(datetime.UTC)
-                + timedelta(minutes=20)
+                + timedelta(minutes=5)
             },
             settings.SECRET_KEY,
             algorithm=settings.ALGORITHM
@@ -126,14 +130,22 @@ class Controllers:
             raise HTTPException(
                 headers={"WWW-Authenticate": "Bearer"},
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication credentials",
+                detail="Invalid authentication credentials(token expired)",
             )
         try:
             username: str = payload.get("sub")
             if username is None:
-                raise credentials_exception
+                raise HTTPException(
+                headers={"WWW-Authenticate": "Bearer"},
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="(username None)Invalid authentication credentials",
+            )
         except JWTError:
-            raise credentials_exception
+            raise HTTPException(
+                headers={"WWW-Authenticate": "Bearer"},
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="(JWT ERROR)Invalid authentication credentials",
+            )
     
 
     def list_birthdays(user: BaseAccount = Depends(auth_account))-> List[PersonResponseSchema]:
