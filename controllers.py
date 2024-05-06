@@ -20,8 +20,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="")
 
 
 class Controllers:
-
-    def sign_up(payload: AccountRegSchema):
+    
+    @classmethod
+    def sign_up(cls, payload: AccountRegSchema):
         try:
             hashed_password = pwd_context.hash(payload.hashed_password)
             data = BaseAccount(
@@ -37,8 +38,9 @@ class Controllers:
                 detail="Data not unique"
             )
 
-#   data: Annotated[OAuth2PasswordRequestForm, Depends()]
-    def sign_in(bg_tasks: BackgroundTasks, payload: Signin_Schema):
+
+    @classmethod
+    def sign_in(cls, bg_tasks: BackgroundTasks, payload: Signin_Schema):
         try:
             user = BaseAccount.objects.get(username=payload.username)
         except:
@@ -63,7 +65,6 @@ class Controllers:
                 }
             }
         )
-        # response = response
         response.set_cookie(
             key="token",
             value=access_token,
@@ -75,19 +76,17 @@ class Controllers:
             ).strftime("%a, %d %b %Y %H:%M:%S GMT"),
         )
         return response
-        # return {"access_token": access_token,
-        #         "token_type": "bearer"
-        # }
 
-
-    def verify_password(plain_password, hashed_password):
+    @classmethod
+    def verify_password(cls, plain_password, hashed_password):
         return pwd_context.verify(
             plain_password,
             hashed_password
         )
         
 
-    def jwt_encode(data: dict):
+    @classmethod
+    def jwt_encode(cls, data: dict):
         return jwt.encode(
             {
                 **data,
@@ -99,7 +98,8 @@ class Controllers:
         )
 
 
-    def jwt_decode(token: str):
+    @classmethod
+    def jwt_decode(cls, token: str):
         try:
             return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         except JWTError:
@@ -108,14 +108,10 @@ class Controllers:
                 detail="Could not decode token"
             )
         
-    # token: Annotated[str, Depends(oauth2_scheme)]
-    async def auth_account(request: Request = Annotated[Request, Depends(oauth2_scheme)]):
-        credentials_exception = HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-        """Checks authentication"""
+
+    @classmethod
+    async def auth_account(cls, request: Request = Annotated[Request, Depends(oauth2_scheme)]):
+        """Handles authentication"""
         token = request.cookies.get("token")
         if token is None:
             raise HTTPException(
@@ -148,7 +144,8 @@ class Controllers:
             )
     
 
-    def list_birthdays(user: BaseAccount = Depends(auth_account))-> List[PersonResponseSchema]:
+    @classmethod
+    def list_birthdays(cls, user: BaseAccount = Depends(auth_account))-> List[PersonResponseSchema]:
         data = Person.objects.all()
         bday_data = []
         for bd in data:
@@ -160,8 +157,9 @@ class Controllers:
             )
         return bday_data
     
-
-    def list_users()-> List[AccountResponseSchema]:
+    
+    @classmethod
+    def list_users(cls)-> List[AccountResponseSchema]:
         user = BaseAccount.objects.all()
         users = []
         for _ in user:
@@ -174,7 +172,8 @@ class Controllers:
         return users
     
     
-    def add_birthday(data: PersonCreateSchema):
+    @classmethod
+    def add_birthday(cls, data: PersonCreateSchema):
         try:
             new_data = Person(name=data.name, birth_date=data.birth_date, extra_info=data.extra_info)
             new_data.save()
@@ -183,7 +182,8 @@ class Controllers:
             raise HTTPException(status_code=406, detail="Data not unique")
         
     
-    def update_birthday(data_id: str, data: PersonUpdateSchema):
+    @classmethod
+    def update_birthday(cls, data_id: str, data: PersonUpdateSchema):
         try:
             update_data = data.model_dump(exclude_unset=True)
             Person.objects(id=data_id).update(**update_data)
@@ -194,7 +194,8 @@ class Controllers:
             raise HTTPException(status_code=500, detail=str(e))
         
     
-    def get_birthday(data_id: str) -> PersonResponseSchema:
+    @classmethod
+    def get_birthday(cls, data_id: str) -> PersonResponseSchema:
         try:
             person = Person.objects.get(id=data_id)
             person_data = {
@@ -208,7 +209,8 @@ class Controllers:
         return person_data
     
     
-    def delete_birthday(data_id: str):
+    @classmethod
+    def delete_birthday(cls, data_id: str):
         try:
             data = Person.objects.get(id=data_id)
             data.delete()
