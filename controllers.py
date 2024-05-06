@@ -109,8 +109,7 @@ class Controllers:
             )
         
 
-    @classmethod
-    async def auth_account(cls, request: Request = Annotated[Request, Depends(oauth2_scheme)]):
+    async def auth_account(request: Request = Annotated[Request, Depends(oauth2_scheme)]):
         """Handles authentication"""
         token = request.cookies.get("token")
         if token is None:
