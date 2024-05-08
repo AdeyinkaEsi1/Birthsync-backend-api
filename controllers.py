@@ -91,7 +91,7 @@ class Controllers:
             {
                 **data,
                 "exp": datetime.datetime.now(datetime.UTC)
-                + timedelta(minutes=5)
+                + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
             },
             settings.SECRET_KEY,
             algorithm=settings.ALGORITHM
