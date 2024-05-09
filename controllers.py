@@ -173,12 +173,15 @@ class Controllers:
     
     @classmethod
     def add_birthday(cls, data: PersonCreateSchema):
+        success = {"message": "Data created successfully"}
         try:
             new_data = Person(name=data.name, birth_date=data.birth_date, extra_info=data.extra_info)
             new_data.save()
-            return {"message": "Data created successfully"}
+            return success
         except NotUniqueError:
             raise HTTPException(status_code=406, detail="Data not unique")
+        
+        
         
     
     @classmethod
