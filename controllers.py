@@ -12,6 +12,8 @@ from passlib.context import CryptContext
 import datetime
 import settings
 from logging import getLogger
+from apscheduler.schedulers.background import BackgroundScheduler
+
 
 
 logger = getLogger(__name__)
@@ -71,8 +73,8 @@ class Controllers:
             secure=True,
             samesite="none",
             expires=(
-                datetime.datetime.utcnow()
-                + datetime.timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+                datetime.utcnow()
+                + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
             ).strftime("%a, %d %b %Y %H:%M:%S GMT"),
         )
         return response
@@ -90,7 +92,7 @@ class Controllers:
         return jwt.encode(
             {
                 **data,
-                "exp": datetime.datetime.now(datetime.UTC)
+                "exp": datetime.utcnow()
                 + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
             },
             settings.SECRET_KEY,
@@ -107,6 +109,7 @@ class Controllers:
                 status_code=401,
                 detail="Could not decode token"
             )
+        
         
 
     async def auth_account(request: Request = Annotated[Request, Depends(oauth2_scheme)]):
@@ -172,14 +175,28 @@ class Controllers:
     
     
     @classmethod
-    def add_birthday(cls, data: PersonCreateSchema):
+    async def add_birthday(cls, data: PersonCreateSchema, background_tasks: BackgroundTasks):
         success = {"message": "Data created successfully"}
         try:
             new_data = Person(name=data.name, birth_date=data.birth_date, extra_info=data.extra_info)
             new_data.save()
+            try:
+                sched = BackgroundScheduler()
+                def reminder():
+                    print(f"Today is {data.name}'s birthday")
+                reminder_time = datetime.combine(data.birth_date, datetime.min.time()) + timedelta(hours=8, minutes=55)
+                sched.add_job(reminder, 'date', run_date=reminder_time)
+                try:
+                    sched.start()
+                except Exception as e:
+                    raise HTTPException(status_code=500, detail=f"Scheduler failed: {e}")
+            except Exception as e:
+                raise HTTPException(status_code=500, detail="scheduler operation failed")
             return success
         except NotUniqueError:
             raise HTTPException(status_code=406, detail="Data not unique")
+        
+        
         
         
         
