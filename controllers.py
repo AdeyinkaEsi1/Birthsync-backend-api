@@ -13,7 +13,13 @@ import datetime
 import settings
 from logging import getLogger
 from apscheduler.schedulers.background import BackgroundScheduler
+from task import send_email_reminder
 
+
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+SMTP_USER = "yhamid2828@gmail.com"
+SMTP_PASS = "uzlt jkns tldf bdej"
 
 
 logger = getLogger(__name__)
@@ -73,7 +79,7 @@ class Controllers:
             secure=True,
             samesite="none",
             expires=(
-                datetime.utcnow()
+                datetime.datetime.utcnow()
                 + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
             ).strftime("%a, %d %b %Y %H:%M:%S GMT"),
         )
@@ -92,7 +98,7 @@ class Controllers:
         return jwt.encode(
             {
                 **data,
-                "exp": datetime.utcnow()
+                "exp": datetime.datetime.utcnow()
                 + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
             },
             settings.SECRET_KEY,
@@ -173,6 +179,7 @@ class Controllers:
             )
         return users
     
+
     
     @classmethod
     async def add_birthday(cls, data: PersonCreateSchema, background_tasks: BackgroundTasks):
@@ -183,8 +190,8 @@ class Controllers:
             try:
                 sched = BackgroundScheduler()
                 def reminder():
-                    print(f"Today is {data.name}'s birthday")
-                reminder_time = datetime.combine(data.birth_date, datetime.min.time()) + timedelta(hours=8, minutes=55)
+                    send_email_reminder("adeyinkah.28@gmail.com", data.name)
+                reminder_time = datetime.datetime.combine(data.birth_date, datetime.datetime.min.time()) + timedelta(hours=23, minutes=15)
                 sched.add_job(reminder, 'date', run_date=reminder_time)
                 try:
                     sched.start()
@@ -195,10 +202,6 @@ class Controllers:
             return success
         except NotUniqueError:
             raise HTTPException(status_code=406, detail="Data not unique")
-        
-        
-        
-        
         
     
     @classmethod
