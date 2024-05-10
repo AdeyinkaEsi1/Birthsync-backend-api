@@ -16,11 +16,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from task import send_email_reminder
 
 
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
-SMTP_USER = "yhamid2828@gmail.com"
-SMTP_PASS = "uzlt jkns tldf bdej"
-
 
 logger = getLogger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
