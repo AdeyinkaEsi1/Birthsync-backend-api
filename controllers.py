@@ -185,11 +185,13 @@ class Controllers:
             try:
                 sched = BackgroundScheduler()
                 def reminder():
+                    print(f"today is {data.name} birthday")
                     send_email_reminder("adeyinkah.28@gmail.com", data.name)
-                reminder_time = datetime.datetime.combine(data.birth_date, datetime.datetime.min.time()) + timedelta(hours=23, minutes=15)
+                reminder_time = datetime.datetime.combine(data.birth_date, datetime.datetime.min.time()) + timedelta(hours=23, minutes=20)
                 sched.add_job(reminder, 'date', run_date=reminder_time)
                 try:
                     sched.start()
+                    print(f"email queued for {reminder_time}")
                 except Exception as e:
                     raise HTTPException(status_code=500, detail=f"Scheduler failed: {e}")
             except Exception as e:
