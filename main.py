@@ -16,4 +16,3 @@ router = APIRouter()
 
 jobstore = MongoDBJobStore(database="bdsync", collection="jobs")
 scheduler = AsyncIOScheduler(jobstores={"mongo": jobstore})
-
