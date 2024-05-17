@@ -1,6 +1,6 @@
+
 from fastapi import APIRouter, status
 from controllers import Controllers
-
 
 
 router = APIRouter()

@@ -1,20 +1,30 @@
-
 from fastapi import BackgroundTasks, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
 from models import *
 from schemas import *
-from typing import Annotated, List, Union
+from typing import Annotated, List
 from mongoengine import NotUniqueError, DoesNotExist
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-import datetime
 import settings
 from logging import getLogger
-from apscheduler.schedulers.background import BackgroundScheduler
 from task import send_email_reminder
+from apscheduler.jobstores.mongodb import MongoDBJobStore
+from apscheduler.schedulers.background import BackgroundScheduler
+from main import *
+import datetime
+from datetime import timedelta
+from uuid import uuid4
+import tracemalloc
+tracemalloc.start()
 
+jobstore = MongoDBJobStore(database="bdsync", collection="jobs")
+scheduler = BackgroundScheduler(jobstores={"mongo": jobstore})
+
+
+# jobss = scheduler.print_jobs()
 
 
 logger = getLogger(__name__)
@@ -175,31 +185,24 @@ class Controllers:
         return users
     
 
-    
+    def send_reminder(name):
+        # print(f"Today is {name}'s birthday")
+        send_email_reminder("adeyinkah.28@gmail.com", {name})
+
     @classmethod
-    async def add_birthday(cls, data: PersonCreateSchema, background_tasks: BackgroundTasks):
+    def add_birthday(cls, data: PersonCreateSchema, background_tasks: BackgroundTasks):
         success = {"message": "Data created successfully"}
-        try:
-            new_data = Person(name=data.name, birth_date=data.birth_date, extra_info=data.extra_info)
-            new_data.save()
-            try:
-                sched = BackgroundScheduler()
-                def reminder():
-                    print(f"today is {data.name} birthday")
-                    send_email_reminder("adeyinkah.28@gmail.com", data.name)
-                reminder_time = datetime.datetime.combine(data.birth_date, datetime.datetime.min.time()) + timedelta(hours=23, minutes=20)
-                sched.add_job(reminder, 'date', run_date=reminder_time)
-                try:
-                    sched.start()
-                    print(f"email queued for {reminder_time}")
-                except Exception as e:
-                    raise HTTPException(status_code=500, detail=f"Scheduler failed: {e}")
-            except Exception as e:
-                raise HTTPException(status_code=500, detail="scheduler operation failed")
-            return success
-        except NotUniqueError:
-            raise HTTPException(status_code=406, detail="Data not unique")
-        
+        new_data = Person(name=data.name, birth_date=data.birth_date, extra_info=data.extra_info)
+        reminder_time = datetime.datetime.combine(data.birth_date, datetime.datetime.min.time()) + timedelta(hours=20, minutes=5)
+        job_id = str(uuid4())
+        # await Controllers.send_reminder(data.name)
+        # scheduler.add_job(asyncio.wait_for, 'date', run_date=reminder_time, args=[Controllers.send_reminder(data.name)], id=f'job_{job_id}', jobstore="mongo")
+        scheduler.add_job(Controllers.send_reminder, 'date', run_date=reminder_time, args=[data.name], id=f'job_{job_id}', jobstore="mongo")
+        scheduler.print_jobs()
+        new_data.save()
+        scheduler.start()
+        return success
+ 
     
     @classmethod
     def update_birthday(cls, data_id: str, data: PersonUpdateSchema):
