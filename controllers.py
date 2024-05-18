@@ -8,9 +8,9 @@ from mongoengine import NotUniqueError, DoesNotExist
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-import settings
+from settings import *
 from logging import getLogger
-from task import send_email_reminder
+from emai_task import send_email_reminder
 from apscheduler.jobstores.mongodb import MongoDBJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 from main import *
@@ -19,6 +19,8 @@ from datetime import timedelta
 from uuid import uuid4
 import tracemalloc
 tracemalloc.start()
+
+
 
 jobstore = MongoDBJobStore(database="bdsync", collection="jobs")
 scheduler = BackgroundScheduler(jobstores={"mongo": jobstore})
@@ -85,7 +87,7 @@ class Controllers:
             samesite="none",
             expires=(
                 datetime.datetime.utcnow()
-                + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+                + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
             ).strftime("%a, %d %b %Y %H:%M:%S GMT"),
         )
         return response
@@ -104,17 +106,17 @@ class Controllers:
             {
                 **data,
                 "exp": datetime.datetime.utcnow()
-                + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+                + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
             },
-            settings.SECRET_KEY,
-            algorithm=settings.ALGORITHM
+            SECRET_KEY,
+            algorithm=ALGORITHM
         )
 
 
     @classmethod
     def jwt_decode(cls, token: str):
         try:
-            return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+            return jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
         except JWTError:
             raise HTTPException(
                 status_code=401,
@@ -187,21 +189,30 @@ class Controllers:
 
     def send_reminder(name):
         # print(f"Today is {name}'s birthday")
-        send_email_reminder("adeyinkah.28@gmail.com", {name})
+        send_email_reminder("adeyinkah.28@gmail.com", name)
 
     @classmethod
     def add_birthday(cls, data: PersonCreateSchema, background_tasks: BackgroundTasks):
         success = {"message": "Data created successfully"}
-        new_data = Person(name=data.name, birth_date=data.birth_date, extra_info=data.extra_info)
-        reminder_time = datetime.datetime.combine(data.birth_date, datetime.datetime.min.time()) + timedelta(hours=20, minutes=5)
-        job_id = str(uuid4())
-        # await Controllers.send_reminder(data.name)
-        # scheduler.add_job(asyncio.wait_for, 'date', run_date=reminder_time, args=[Controllers.send_reminder(data.name)], id=f'job_{job_id}', jobstore="mongo")
-        scheduler.add_job(Controllers.send_reminder, 'date', run_date=reminder_time, args=[data.name], id=f'job_{job_id}', jobstore="mongo")
-        scheduler.print_jobs()
-        new_data.save()
-        scheduler.start()
-        return success
+        try:
+            new_data = Person(name=data.name, birth_date=data.birth_date, extra_info=data.extra_info)
+            current_year = datetime.date.today().year
+            provided_birthday = data.birth_date
+            next_birthday = provided_birthday
+            if provided_birthday < datetime.date.today():
+                next_birthday = provided_birthday.replace(year=current_year + 1)
+            reminder_time = datetime.datetime.combine(next_birthday, datetime.datetime.min.time()) + timedelta(hours=21, minutes=30)
+            job_id = str(uuid4())
+            scheduler.add_job(Controllers.send_reminder, 'date', run_date=reminder_time, args=[data.name], id=f'job_{job_id}', jobstore="mongo")
+            scheduler.print_jobs()
+            new_data.save()
+            scheduler.start()
+            return success
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error encountered --> {e}"
+            )
  
     
     @classmethod
