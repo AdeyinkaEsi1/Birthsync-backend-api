@@ -10,7 +10,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from settings import *
 from logging import getLogger
-from task import send_email_reminder
+from emai_task import send_email_reminder
 from apscheduler.jobstores.mongodb import MongoDBJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 from main import *
@@ -194,14 +194,25 @@ class Controllers:
     @classmethod
     def add_birthday(cls, data: PersonCreateSchema, background_tasks: BackgroundTasks):
         success = {"message": "Data created successfully"}
-        new_data = Person(name=data.name, birth_date=data.birth_date, extra_info=data.extra_info)
-        reminder_time = datetime.datetime.combine(data.birth_date, datetime.datetime.min.time()) + timedelta(hours=20, minutes=5)
-        job_id = str(uuid4())
-        scheduler.add_job(Controllers.send_reminder, 'date', run_date=reminder_time, args=[data.name], id=f'job_{job_id}', jobstore="mongo")
-        scheduler.print_jobs()
-        new_data.save()
-        scheduler.start()
-        return success
+        try:
+            new_data = Person(name=data.name, birth_date=data.birth_date, extra_info=data.extra_info)
+            current_year = datetime.date.today().year
+            provided_birthday = data.birth_date
+            next_birthday = provided_birthday
+            if provided_birthday < datetime.date.today():
+                next_birthday = provided_birthday.replace(year=current_year + 1)
+            reminder_time = datetime.datetime.combine(next_birthday, datetime.datetime.min.time()) + timedelta(hours=21, minutes=30)
+            job_id = str(uuid4())
+            scheduler.add_job(Controllers.send_reminder, 'date', run_date=reminder_time, args=[data.name], id=f'job_{job_id}', jobstore="mongo")
+            scheduler.print_jobs()
+            new_data.save()
+            scheduler.start()
+            return success
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error encountered --> {e}"
+            )
  
     
     @classmethod
