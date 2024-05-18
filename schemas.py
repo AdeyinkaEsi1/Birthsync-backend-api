@@ -24,8 +24,7 @@ class PersonUpdateSchema(BaseModel):
 
     class Config:
         orm_mode = True
-
-        # =======================
+        
 
 class AccountDetailsSchema(BaseModel):
     username: str
