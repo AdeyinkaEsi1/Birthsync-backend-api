@@ -4,7 +4,6 @@ from fastapi import HTTPException, status
 from settings import *
 
 
-
 def send_email_reminder(recipient_email, name):
     subject = f"Birthday Reminder for {name}"
     body = f"Today is {name}'s birthday. Don't forget to wish them a happy birthday!"
