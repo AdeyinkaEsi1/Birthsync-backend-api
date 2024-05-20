@@ -1,4 +1,3 @@
-
 from mongoengine import connect
 from fastapi import APIRouter, FastAPI
 from routes import router
