@@ -196,24 +196,14 @@ class Controllers:
         success = {"message": "Data created successfully"}
         try:
             new_data = Person(name=data.name, birth_date=data.birth_date, extra_info=data.extra_info)
-            current_year = datetime.date.today().year
-            provided_birthday = data.birth_date
-            next_birthday = provided_birthday
-            if provided_birthday < datetime.date.today():
-                next_birthday = provided_birthday.replace(year=current_year + 1)
-            reminder_time = datetime.datetime.combine(next_birthday, datetime.datetime.min.time()) + timedelta(hours=21, minutes=30)
-            job_id = str(uuid4())
-            scheduler.add_job(Controllers.send_reminder, 'date', run_date=reminder_time, args=[data.name], id=f'job_{job_id}', jobstore="mongo")
-            scheduler.print_jobs()
             new_data.save()
-            scheduler.start()
             return success
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error encountered --> {e}"
             )
- 
+        
     
     @classmethod
     def update_birthday(cls, data_id: str, data: PersonUpdateSchema):
@@ -244,6 +234,8 @@ class Controllers:
     
     @classmethod
     def delete_birthday(cls, data_id: str):
+        # scheduler.remove_all_jobs()
+        # scheduler.print_jobs()
         try:
             data = Person.objects.get(id=data_id)
             data.delete()
@@ -252,3 +244,16 @@ class Controllers:
         return {"message": "Data deleted successfully"}     
         
 
+    def birthday_scheduler(cls):
+            # current_year = datetime.date.today().year
+            # provided_birthday = data.birth_date
+            # next_birthday = provided_birthday
+            # if provided_birthday < datetime.date.today():
+            #     next_birthday = provided_birthday.replace(year=current_year + 1)
+            # reminder_time = datetime.datetime.combine(next_birthday, datetime.datetime.min.time()) + timedelta(hours=20, minutes=25)
+            # job_id = str(uuid4())
+            # scheduler.add_job(Controllers.send_reminder, 'date', run_date=reminder_time, args=[data.name], id=f'job_{job_id}', jobstore="mongo")
+            # scheduler.print_jobs()
+            # scheduler.start()
+            pass
+    
