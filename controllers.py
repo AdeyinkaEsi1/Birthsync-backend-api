@@ -17,8 +17,6 @@ from main import *
 import datetime
 from datetime import timedelta
 from uuid import uuid4
-import tracemalloc
-tracemalloc.start()
 
 
 
