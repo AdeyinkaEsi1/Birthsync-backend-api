@@ -17,8 +17,6 @@ from main import *
 import datetime
 from datetime import timedelta
 from uuid import uuid4
-import tracemalloc
-tracemalloc.start()
 
 
 
@@ -175,16 +173,7 @@ class Controllers:
     
     @classmethod
     def list_users(cls)-> List[AccountResponseSchema]:
-        user = BaseAccount.objects.all()
-        users = []
-        for _ in user:
-            users.append(
-                {
-                    "username": _.username,
-                    "email": _.email
-                }
-            )
-        return users
+        return BaseAccount.objects.all()
     
 
     def send_reminder(name):
@@ -200,7 +189,7 @@ class Controllers:
             return success
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status_code=status.HTTPR,
                 detail=f"Error encountered --> {e}"
             )
         
