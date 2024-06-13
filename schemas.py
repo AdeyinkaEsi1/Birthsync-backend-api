@@ -41,6 +41,7 @@ class Signin_Schema(AccountDetailsSchema):
 class AccountResponseSchema(AccountDetailsSchema):
     pass
 
+
 class AccountUpdateSchema(BaseModel):
     username: Optional[str] = None
     email: Optional[EmailStr] = None
