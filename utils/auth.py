@@ -17,14 +17,14 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="")
 logger = getLogger(__name__)
 
 
-def verify_password(cls, plain_password, hashed_password):
+def verify_password(plain_password, hashed_password):
     return pwd_context.verify(
         plain_password,
         hashed_password
     )
 
 
-def jwt_encode(cls, data: dict):
+def jwt_encode(data: dict):
     return jwt.encode(
         {
             **data,
@@ -36,7 +36,7 @@ def jwt_encode(cls, data: dict):
     )
 
 
-def jwt_decode(cls, token: str):
+def jwt_decode(token: str):
     try:
         return jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
     except JWTError:
