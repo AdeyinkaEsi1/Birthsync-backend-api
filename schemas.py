@@ -1,12 +1,16 @@
 from typing import Optional, Union
 from pydantic import BaseModel, Field, EmailStr
-from datetime import date
+from datetime import date, datetime
 
+
+class DateModel(BaseModel):
+    provided_birthday: date
 
 class PersonBaseSchema(BaseModel):
     name: str = ...
     birth_date: date = Field(..., description="Date of birth")
     extra_info: str
+    # time: datetime = Field(...)
 
 
 class PersonResponseSchema(PersonBaseSchema):
