@@ -5,6 +5,8 @@ from settings import *
 
 
 def send_email_reminder(recipient_email, name):
+    """sendgrid free trial expired"""
+    
     subject = f"Birthday Reminder for {name}"
     body = f"Today is {name}'s birthday. Don't forget to wish them a happy birthday!"
 
