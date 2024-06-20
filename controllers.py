@@ -1,12 +1,10 @@
-from fastapi import BackgroundTasks, Depends, HTTPException, Request, status
+from fastapi import BackgroundTasks, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from models import *
 from schemas import *
-from typing import Annotated, List
+from typing import List
 from mongoengine import NotUniqueError, DoesNotExist
-from datetime import datetime, timedelta
-from jose import JWTError, jwt
 from passlib.context import CryptContext
 from settings import *
 from logging import getLogger
@@ -16,17 +14,13 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from main import *
 import datetime
 from datetime import timedelta
+# import datetime
 from uuid import uuid4
-
+from utils.auth import auth_account, verify_password, jwt_encode
 
 
 jobstore = MongoDBJobStore(database="bdsync", collection="jobs")
 scheduler = BackgroundScheduler(jobstores={"mongo": jobstore})
-
-
-# jobss = scheduler.print_jobs()
-
-
 logger = getLogger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="")
@@ -61,9 +55,9 @@ class Controllers:
                 status_code=404,
                 detail="Details not found"
             )
-        if user and Controllers.verify_password(payload.password, user.hashed_password):
+        if user and verify_password(payload.password, user.hashed_password):
             try:
-                access_token = Controllers.jwt_encode(data={"sub": user.username})
+                access_token = jwt_encode(data={"sub": user.username})
             except:
                 raise HTTPException(
                 status_code=404,
@@ -89,72 +83,6 @@ class Controllers:
             ).strftime("%a, %d %b %Y %H:%M:%S GMT"),
         )
         return response
-
-    @classmethod
-    def verify_password(cls, plain_password, hashed_password):
-        return pwd_context.verify(
-            plain_password,
-            hashed_password
-        )
-        
-
-    @classmethod
-    def jwt_encode(cls, data: dict):
-        return jwt.encode(
-            {
-                **data,
-                "exp": datetime.datetime.utcnow()
-                + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-            },
-            SECRET_KEY,
-            algorithm=ALGORITHM
-        )
-
-
-    @classmethod
-    def jwt_decode(cls, token: str):
-        try:
-            return jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-        except JWTError:
-            raise HTTPException(
-                status_code=401,
-                detail="Could not decode token"
-            )
-        
-        
-
-    async def auth_account(request: Request = Annotated[Request, Depends(oauth2_scheme)]):
-        """Handles authentication"""
-        token = request.cookies.get("token")
-        if token is None:
-            raise HTTPException(
-                headers={"WWW-Authenticate": "Bearer"},
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication credentials",
-            )
-        try:
-            payload  = Controllers.jwt_decode(token)
-        except Exception:
-            logger.exception("auth_account(jwt_decode): Detokenization failed")
-            raise HTTPException(
-                headers={"WWW-Authenticate": "Bearer"},
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication credentials(token expired)",
-            )
-        try:
-            username: str = payload.get("sub")
-            if username is None:
-                raise HTTPException(
-                headers={"WWW-Authenticate": "Bearer"},
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="(username None)Invalid authentication credentials",
-            )
-        except JWTError:
-            raise HTTPException(
-                headers={"WWW-Authenticate": "Bearer"},
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="(JWT ERROR)Invalid authentication credentials",
-            )
     
 
     @classmethod
@@ -168,6 +96,7 @@ class Controllers:
                  "extra_info": bd.extra_info,
                  "id": str(bd.id)}
             )
+        scheduler.print_jobs()
         return bday_data
     
     
@@ -176,23 +105,20 @@ class Controllers:
         return BaseAccount.objects.all()
     
 
-    def send_reminder(name):
-        # print(f"Today is {name}'s birthday")
-        send_email_reminder("adeyinkah.28@gmail.com", name)
-
     @classmethod
     def add_birthday(cls, data: PersonCreateSchema, background_tasks: BackgroundTasks):
         success = {"message": "Data created successfully"}
         try:
             new_data = Person(name=data.name, birth_date=data.birth_date, extra_info=data.extra_info)
             new_data.save()
+            Controllers.schedule_birthday_reminder()
             return success
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTPR,
+                status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Error encountered --> {e}"
-            )
-        
+            )    
+
     
     @classmethod
     def update_birthday(cls, data_id: str, data: PersonUpdateSchema):
@@ -231,18 +157,25 @@ class Controllers:
         return {"message": "Data deleted successfully"}     
         
 
-    def birthday_scheduler(cls, persons):
-            current_year = datetime.date.today().year
-            for date in persons:
-                provided_birthday = date
-            if provided_birthday < datetime.date.today():
-                next_birthday = provided_birthday.replace(year=current_year + 1)
-            else:
-                next_birthday = provided_birthday
-            reminder_time = datetime.datetime.combine(next_birthday, datetime.datetime.min.time()) + timedelta(hours=20, minutes=25)
-            job_id = str(uuid4())
-            scheduler.add_job(Controllers.send_reminder, 'date', run_date=reminder_time, args=[persons.name], id=f'job_{job_id}', jobstore="mongo")
-            scheduler.print_jobs()
-            if not scheduler.running:
-                scheduler.start()
+    def send_reminder(name):
+        print(f"Today is {name}'s birthday")
+        # send_email_reminder("adeyinkah.28@gmail.com", name)
+        
 
+    @classmethod
+    def schedule_birthday_reminder(cls):
+        today = datetime.date.today()
+        two_days_time = today + timedelta(days=2)
+        for person in Person.objects():
+            user_bdate = person.birth_date
+        date_model = DateModel(provided_birthday=user_bdate)
+        prov_birthday = date_model.provided_birthday
+        if two_days_time - prov_birthday <= timedelta(days=2):
+           provided_birthday = prov_birthday
+        reminder_time = datetime.datetime.combine(provided_birthday, datetime.datetime.min.time()) + timedelta(hours=21, minutes=39)
+        job_id = f'job_{str(uuid4())}'
+        scheduler.add_job(Controllers.send_reminder, 'date', run_date=reminder_time, args=[person.name], id=job_id, jobstore="mongo")
+        scheduler.print_jobs()
+        scheduler.start()
+
+    
