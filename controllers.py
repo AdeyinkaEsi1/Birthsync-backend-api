@@ -172,7 +172,7 @@ class Controllers:
         prov_birthday = date_model.provided_birthday
         if two_days_time - prov_birthday <= timedelta(days=2):
            provided_birthday = prov_birthday
-        reminder_time = datetime.datetime.combine(provided_birthday, datetime.datetime.min.time()) + timedelta(hours=21, minutes=39)
+        reminder_time = datetime.datetime.combine(provided_birthday, datetime.datetime.min.time()) + timedelta(hours=22, minutes=55)
         job_id = f'job_{str(uuid4())}'
         scheduler.add_job(Controllers.send_reminder, 'date', run_date=reminder_time, args=[person.name], id=job_id, jobstore="mongo")
         scheduler.print_jobs()
