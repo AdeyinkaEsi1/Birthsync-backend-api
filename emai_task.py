@@ -16,7 +16,6 @@ def send_email_reminder(recipient_email, name):
         to_emails=recipient_email,
         subject=subject,
         plain_text_content=body)
-
     try:
         sg = SendGridAPIClient(api_key=SENDGRID_API_KEY)
 
