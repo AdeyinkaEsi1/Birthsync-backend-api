@@ -5,7 +5,6 @@ from mongoengine import(
     DateTimeField,
     DateField)
 
-    
 class Person(Document):
     name = StringField(max_length=50, unique=True, required=True)
     birth_date = DateField(required=True)
