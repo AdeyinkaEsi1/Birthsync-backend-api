@@ -24,7 +24,7 @@ logger = getLogger(__name__)
 # Hmongodb1
 
 uri = os.getenv("MONGO_URI")
-uri = "mongodb+srv://Hamid:<Hmongodb1>@cluster0.zaaveoa.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+uri = ""
 if not uri:
     raise ValueError("MONGO_URI environment variable is not set")
 client = MongoClient(uri, server_api=ServerApi('1'))
