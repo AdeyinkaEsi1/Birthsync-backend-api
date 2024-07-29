@@ -10,11 +10,32 @@ from logging import getLogger
 from main import *
 import datetime
 from datetime import timedelta
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="")
 logger = getLogger(__name__)
+
+# Hmongodb1
+
+uri = os.getenv("MONGO_URI")
+uri = "mongodb+srv://Hamid:<Hmongodb1>@cluster0.zaaveoa.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+if not uri:
+    raise ValueError("MONGO_URI environment variable is not set")
+client = MongoClient(uri, server_api=ServerApi('1'))
+db = client.test
+
+# Send a ping to confirm a successful connection
+try:
+    client.admin.command('ping')
+    print("Pinged your deployment. You successfully connected to MongoDB!")
+except Exception as e:
+    print(e)
 
 
 def verify_password(plain_password, hashed_password):
