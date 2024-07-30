@@ -9,18 +9,14 @@ from passlib.context import CryptContext
 from settings import *
 from logging import getLogger
 from emai_task import send_email_reminder
-from apscheduler.jobstores.mongodb import MongoDBJobStore
-from apscheduler.schedulers.background import BackgroundScheduler
+from scheduler import scheduler, jobstore
 from main import *
 import datetime
 from datetime import timedelta
-# import datetime
 from uuid import uuid4
 from utils.auth import auth_account, verify_password, jwt_encode
 
 
-jobstore = MongoDBJobStore(database="bdsync", collection="jobs")
-scheduler = BackgroundScheduler(jobstores={"mongo": jobstore})
 logger = getLogger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="")
