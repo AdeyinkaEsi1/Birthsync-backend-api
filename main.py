@@ -1,24 +1,20 @@
 from mongoengine import connect
-from fastapi import APIRouter, FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI
+import pymongo
 from routes import router
-from apscheduler.jobstores.mongodb import MongoDBJobStore
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from pydantic import BaseModel
-from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
+from pymongo import MongoClient
+import settings
+from database import connect_db
 
+""" Apscheduler DB"""
+# connect("bdsync")
+connect_db()
 
-connect("bdsync")
 
 app = FastAPI()
 
 app.include_router(router)
-router = APIRouter()
-
-
-jobstore = MongoDBJobStore(database="bdsync", collection="jobs")
-scheduler = AsyncIOScheduler(jobstores={"mongo": jobstore})
-
 
 # Allow CORS for local development
 app.add_middleware(
