@@ -10,7 +10,7 @@ if not dotenv_path:
 load_dotenv(dotenv_path, override=True)
 
 MONGO_URI = os.getenv("MONGO_URI")
-# print(MONGO_URI)
+
 if not MONGO_URI:
     raise Exception("MONGO_URI is not set in the environment variables")
 def connect_db():

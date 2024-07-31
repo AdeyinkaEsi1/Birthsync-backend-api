@@ -73,6 +73,7 @@ async def auth_account(request: Request = Annotated[Request, Depends(oauth2_sche
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="(username None)Invalid authentication credentials",
         )
+        return username
     except JWTError:
         raise HTTPException(
             headers={"WWW-Authenticate": "Bearer"},
