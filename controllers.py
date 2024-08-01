@@ -1,4 +1,4 @@
-from fastapi import BackgroundTasks, Depends, HTTPException, status
+from fastapi import BackgroundTasks, Depends, HTTPException, Response, status
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from models import *
@@ -79,6 +79,12 @@ class Controllers:
             ).strftime("%a, %d %b %Y %H:%M:%S GMT"),
         )
         return response
+    
+    
+    @classmethod
+    def sign_out(cls, response: Response):
+        response.delete_cookie("token")
+        return ("message: successfully signed out")
     
 
     @classmethod
