@@ -48,10 +48,17 @@ router.post(
 
 
 router.post(
-        "/auth/sign_in",
+        "/auth/signin",
         tags=["Auth"],
         status_code=status.HTTP_200_OK,
         )(Controllers.sign_in)
+
+
+router.post(
+        "/auth/signout",
+        tags=["Auth"],
+        status_code=status.HTTP_200_OK
+        )(Controllers.sign_out)
 
 
 router.get(
