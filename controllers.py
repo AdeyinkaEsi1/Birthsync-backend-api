@@ -1,4 +1,5 @@
 from fastapi import BackgroundTasks, Depends, HTTPException, Response, status
+from fastapi import responses
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from models import *
@@ -113,7 +114,7 @@ class Controllers:
         try:
             new_data = Person(name=data.name, birth_date=data.birth_date, extra_info=data.extra_info)
             new_data.save()
-            Controllers.schedule_birthday_reminder()
+            # Controllers.schedule_birthday_reminder()
             return success
         except Exception as e:
             raise HTTPException(
