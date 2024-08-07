@@ -26,6 +26,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="")
 class Controllers:
     
     @classmethod
+    def read_root():
+        return {"message": "Welcome to the Birthsync API"}
+    
+    @classmethod
     def sign_up(cls, payload: AccountRegSchema):
         try:
             hashed_password = pwd_context.hash(payload.hashed_password)
