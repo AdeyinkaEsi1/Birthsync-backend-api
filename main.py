@@ -1,10 +1,9 @@
 from mongoengine import connect
-from fastapi import APIRouter, FastAPI
-import pymongo
+from fastapi import FastAPI
+import uvicorn
 from routes import router
 from fastapi.middleware.cors import CORSMiddleware
-from pymongo import MongoClient
-import settings
+import os
 from database import connect_db
 
 """ Apscheduler DB"""
@@ -24,4 +23,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
-# 18870884
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
+    
