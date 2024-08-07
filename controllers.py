@@ -93,8 +93,9 @@ class Controllers:
     
 
     @classmethod
-    def list_birthdays(cls, user: BaseAccount = Depends(auth_account))-> List[PersonResponseSchema]:
-        data = Person.objects.all()
+    def list_birthdays(cls, user: str = Depends(auth_account)) -> List[PersonResponseSchema]:
+        owner_account = BaseAccount.objects.get(username=user)
+        data = Person.objects(owner=owner_account)
         bday_data = []
         for bd in data:
             bday_data.append(
@@ -113,10 +114,16 @@ class Controllers:
     
 
     @classmethod
-    def add_birthday(cls, data: PersonCreateSchema, background_tasks: BackgroundTasks):
+    def add_birthday(cls, data: PersonCreateSchema, background_tasks: BackgroundTasks, user: str = Depends(auth_account)):
         success = {"message": "Data created successfully"}
         try:
-            new_data = Person(name=data.name, birth_date=data.birth_date, extra_info=data.extra_info)
+            owner_account = BaseAccount.objects.get(username=user)
+            new_data = Person(
+                name=data.name,
+                birth_date=data.birth_date,
+                extra_info=data.extra_info,
+                owner=owner_account
+            )
             new_data.save()
             # Controllers.schedule_birthday_reminder()
             return success
