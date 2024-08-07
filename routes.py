@@ -6,6 +6,13 @@ router = APIRouter()
 
 
 router.get(
+        "/root",
+        tags=["welcome"],
+        status_code=status.HTTP_200_OK
+        )(Controllers.read_root)
+
+
+router.get(
         "/bdays/",
         tags=["Birthdays"],
         status_code=status.HTTP_200_OK
