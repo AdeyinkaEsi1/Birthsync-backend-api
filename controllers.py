@@ -1,5 +1,4 @@
 from fastapi import BackgroundTasks, Depends, HTTPException, Response, status
-from fastapi import responses
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from models import *
@@ -9,7 +8,7 @@ from mongoengine import NotUniqueError, DoesNotExist
 from passlib.context import CryptContext
 from settings import *
 from logging import getLogger
-from emai_task import send_email_reminder
+# from emai_task import send_email_reminder
 from scheduler import scheduler, jobstore
 from main import *
 import datetime
@@ -26,8 +25,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="")
 class Controllers:
     
     @classmethod
-    def read_root():
+    def read_root(cls):
         return {"message": "Welcome to the Birthsync API"}
+    
     
     @classmethod
     def sign_up(cls, payload: AccountRegSchema):
