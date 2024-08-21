@@ -36,7 +36,7 @@ class AccountDetailsSchema(BaseModel):
 
 
 class AccountRegSchema(AccountDetailsSchema):
-    hashed_password: str
+    password: str
 
 class Signin_Schema(AccountDetailsSchema):
     password: Union[str, int]
