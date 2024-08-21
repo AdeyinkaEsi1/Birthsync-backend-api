@@ -10,7 +10,6 @@ class PersonBaseSchema(BaseModel):
     name: str = ...
     birth_date: date = Field(..., description="Date of birth")
     extra_info: str
-    # time: datetime = Field(...)
 
 
 class PersonResponseSchema(PersonBaseSchema):

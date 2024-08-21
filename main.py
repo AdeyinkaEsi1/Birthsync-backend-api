@@ -6,10 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 from database import connect_db
 
-""" Apscheduler DB"""
-# connect("bdsync")
-connect_db()
 
+connect_db()
 
 app = FastAPI()
 

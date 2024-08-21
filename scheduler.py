@@ -1,4 +1,3 @@
-# scheduler.py
 from apscheduler.jobstores.mongodb import MongoDBJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 
