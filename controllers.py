@@ -9,7 +9,7 @@ from passlib.context import CryptContext
 from settings import *
 from logging import getLogger
 # from emai_task import send_email_reminder
-from scheduler import scheduler, jobstore
+from scheduler import scheduler
 from main import *
 import datetime
 from datetime import timedelta
@@ -17,9 +17,7 @@ from uuid import uuid4
 from utils.auth import auth_account, verify_password, jwt_encode
 
 
-logger = getLogger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="")
 
 
 class Controllers:
@@ -32,7 +30,7 @@ class Controllers:
     @classmethod
     def sign_up(cls, payload: AccountRegSchema):
         try:
-            hashed_password = pwd_context.hash(payload.hashed_password)
+            hashed_password = pwd_context.hash(payload.password)
             data = BaseAccount(
                 username=payload.username,
                 hashed_password=hashed_password,
@@ -94,8 +92,8 @@ class Controllers:
 
     @classmethod
     def list_birthdays(cls, user: str = Depends(auth_account)) -> List[PersonResponseSchema]:
-        owner_account = BaseAccount.objects.get(username=user)
-        data = Person.objects(owner=owner_account)
+        user_account = BaseAccount.objects.get(username=user)
+        data = Person.objects(user=user_account)
         bday_data = []
         for bd in data:
             bday_data.append(
@@ -117,12 +115,12 @@ class Controllers:
     def add_birthday(cls, data: PersonCreateSchema, background_tasks: BackgroundTasks, user: str = Depends(auth_account)):
         success = {"message": "Data created successfully"}
         try:
-            owner_account = BaseAccount.objects.get(username=user)
+            user_account = BaseAccount.objects.get(username=user)
             new_data = Person(
                 name=data.name,
                 birth_date=data.birth_date,
                 extra_info=data.extra_info,
-                owner=owner_account
+                user=user_account
             )
             new_data.save()
             # Controllers.schedule_birthday_reminder()
