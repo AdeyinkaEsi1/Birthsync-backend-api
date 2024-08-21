@@ -30,7 +30,7 @@ class Controllers:
     @classmethod
     def sign_up(cls, payload: AccountRegSchema):
         try:
-            hashed_password = pwd_context.hash(payload.hashed_password)
+            hashed_password = pwd_context.hash(payload.password)
             data = BaseAccount(
                 username=payload.username,
                 hashed_password=hashed_password,
