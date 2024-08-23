@@ -67,9 +67,9 @@ router.post(
         )(Controllers.sign_out)
 
 
-router.get(
-    "/auth/users",
-    tags=["Users"],
-    status_code=status.HTTP_200_OK,
-    )(Controllers.list_users)
+# router.get(
+#     "/auth/users",
+#     tags=["Users"],
+#     status_code=status.HTTP_200_OK,
+#     )(Controllers.list_users)
 
